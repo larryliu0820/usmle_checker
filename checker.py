@@ -171,4 +171,4 @@ if __name__ == "__main__":
                 except (TimeoutException, NoSuchElementException, ElementClickInterceptedException) as e:
                     continue
     except (TimeoutException, NoSuchElementException, ElementClickInterceptedException) as e:
-        my_checker.email_util.send_email(ERROR_EMAIL_SUBJECT, )
+        my_checker.email_util.send_email(ERROR_EMAIL_SUBJECT, "Failed after 3 retries.", str(e))
