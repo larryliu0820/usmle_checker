@@ -3,6 +3,9 @@
 # Date: 5/4/2019
 # !/usr/bin/env python
 import functools
+import getpass
+import random
+import time
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException
@@ -52,15 +55,19 @@ class Checker(object):
         self.browser = webdriver.Chrome(executable_path='./chromedriver', chrome_options=chrome_options)
         self.wait = WebDriverWait(self.browser, 10)
         self.email_util = EmailUtil()
-        try:
-            self.browser.get(self.URL)
-            self.wait.until(EC.presence_of_element_located((By.ID, self.WEB_AUTH_ID)))
-            print('Going to %s' % self.URL)
-        except TimeoutException as e:
-            self.email_util.send_email(ERROR_EMAIL_SUBJECT, str(e))
+
+    @email_exception
+    def start(self):
+        self.browser.get(self.URL)
+        self.wait.until(EC.presence_of_element_located((By.ID, self.WEB_AUTH_ID)))
+        print('Going to %s' % self.URL)
 
     @email_exception
     def login(self, username: str = None, password: str = None) -> bool:
+        if not username:
+            username = input("Please type in your USMLE login username: ")
+        if not password:
+            password = getpass.getpass("Please type in your USMLE login username: ")
         username_elem = self.browser.find_element_by_id(self.USERNAME_ID)
         password_elem = self.browser.find_element_by_id(self.PASSWORD_ID)
 
@@ -145,14 +152,23 @@ class Checker(object):
 
 if __name__ == "__main__":
     my_checker = Checker()
-    my_checker.login()
+    try:
+        for i in range(0, 3):
+            my_checker.start()
+            my_checker.login()
+            print('Going to home page')
+            my_checker.click_by_id(my_checker.SKIP_BTN_ID, my_checker.HOME_ID)
 
-    print('Going to home page')
-    my_checker.click_by_id(my_checker.SKIP_BTN_ID, my_checker.HOME_ID)
-
-    print('Clicking on calendar button')
-    my_checker.click_by_text(my_checker.CALENDAR_BTN_TEXT, my_checker.CALENDAR_PAGE_ID)
-
-    while True:
-        print('Checking Los Angeles June 2019')
-        my_checker.check_city_month(my_checker.LOS_ANGELES_BTN_ID, "06-2019")
+            print('Clicking on calendar button')
+            my_checker.click_by_text(my_checker.CALENDAR_BTN_TEXT, my_checker.CALENDAR_PAGE_ID)
+            while True:
+                try:
+                    print('Checking Los Angeles June 2019')
+                    my_checker.check_city_month(my_checker.LOS_ANGELES_BTN_ID, "6-2019")
+                    wait_sec = random.randint(5, 61)
+                    print('Wait for %d seconds' % wait_sec)
+                    time.sleep(wait_sec)
+                except (TimeoutException, NoSuchElementException, ElementClickInterceptedException) as e:
+                    continue
+    except (TimeoutException, NoSuchElementException, ElementClickInterceptedException) as e:
+        my_checker.email_util.send_email(ERROR_EMAIL_SUBJECT, )

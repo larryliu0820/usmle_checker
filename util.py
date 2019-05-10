@@ -1,6 +1,7 @@
 # Created by Larry Liu
 #
 # Date: 5/4/2019
+import getpass
 import smtplib
 import ssl
 from email.mime.multipart import MIMEMultipart
@@ -15,7 +16,7 @@ class EmailUtil:
     def __init__(self):
         self.sender_email = input("Sender email: (default mengweiliu600267@gmail.com)") or "mengweiliu600267@gmail.com"
         self.receiver_email = input("Receiver email: (default yannanyu0123@gmail.com)") or "yannanyu0123@gmail.com"
-        self.password = input("Type your password for %s and press enter: " % self.sender_email)
+        self.password = getpass.getpass("Type your password for %s and press enter: " % self.sender_email)
 
     def send_email(self, subject: str, msg: str, html: str = None):
         message = MIMEMultipart("alternative")
