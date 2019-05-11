@@ -9,7 +9,7 @@ import time
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
@@ -49,10 +49,10 @@ class Checker(object):
         return wrapped
 
     def __init__(self):
-        chrome_options = Options()
-        chrome_options.add_argument('--headless')
-        chrome_options.add_argument('--disable-gpu')
-        self.browser = webdriver.Chrome(executable_path='./chromedriver', chrome_options=chrome_options)
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')
+        self.browser = webdriver.Firefox(executable_path="./geckodriver", firefox_options=options)
         self.wait = WebDriverWait(self.browser, 10)
         self.email_util = EmailUtil()
 
@@ -67,7 +67,7 @@ class Checker(object):
         if not username:
             username = input("Please type in your USMLE login username: ")
         if not password:
-            password = getpass.getpass("Please type in your USMLE login username: ")
+            password = getpass.getpass("Please type in your USMLE login password: ")
         username_elem = self.browser.find_element_by_id(self.USERNAME_ID)
         password_elem = self.browser.find_element_by_id(self.PASSWORD_ID)
 
@@ -101,7 +101,7 @@ class Checker(object):
         available_dates = Checker.get_available_dates_in_month(month_cal)
         if available_dates:
             print("Congrats! We find you available spot! Sending email to %s" % self.email_util.receiver_email)
-            self.email_util.send_email(SUCCESS_EMAIL_SUBJECT, "See below: \n",
+            self.email_util.send_email(SUCCESS_EMAIL_SUBJECT, "",
                                        month_cal.get_attribute('innerHTML'))
 
     @email_exception
@@ -165,7 +165,12 @@ if __name__ == "__main__":
                 try:
                     print('Checking Los Angeles June 2019')
                     my_checker.check_city_month(my_checker.LOS_ANGELES_BTN_ID, "6-2019")
-                    wait_sec = random.randint(5, 61)
+                    wait_sec = random.randint(5, 10)
+                    print('Wait for %d seconds' % wait_sec)
+                    time.sleep(wait_sec)
+                    print('Checking Los Angeles July 2019')
+                    my_checker.check_city_month(my_checker.LOS_ANGELES_BTN_ID, "7-2019")
+                    wait_sec = random.randint(5, 10)
                     print('Wait for %d seconds' % wait_sec)
                     time.sleep(wait_sec)
                 except (TimeoutException, NoSuchElementException, ElementClickInterceptedException) as e:

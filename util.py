@@ -26,6 +26,7 @@ class EmailUtil:
         part1 = MIMEText(msg, "plain")
         message.attach(part1)
         if html:
+            html = '<a href="https://csessauthentication.ecfmg.org/">Click Me</a>' + html
             part2 = MIMEText(html, "html")
             message.attach(part2)
         context = ssl.create_default_context()
