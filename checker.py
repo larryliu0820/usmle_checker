@@ -4,6 +4,7 @@
 # !/usr/bin/env python
 import functools
 import getpass
+import os
 import random
 import time
 
@@ -42,7 +43,7 @@ class Checker(object):
                 return func(inst, *args, **kwargs)
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException) as e:
                 inst.email_util.send_email(ERROR_EMAIL_SUBJECT, "Error:", inst.browser.page_source)
-                with open('./debug.html', mode='w', encoding='utf-8') as f:
+                with open(os.path.dirname(os.path.realpath(__file__)) + '/debug.html', mode='w', encoding='utf-8') as f:
                     f.write(inst.browser.page_source)
                 raise e
 
@@ -52,7 +53,8 @@ class Checker(object):
         options = Options()
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')
-        self.browser = webdriver.Firefox(executable_path="./geckodriver", firefox_options=options)
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        self.browser = webdriver.Firefox(executable_path=dir_path + '/geckodriver', firefox_options=options)
         self.wait = WebDriverWait(self.browser, 10)
         self.email_util = EmailUtil()
 
