@@ -9,6 +9,7 @@ from email.mime.text import MIMEText
 
 ERROR_EMAIL_SUBJECT = "Automatic Exam Reservation System Has An Error!"
 SUCCESS_EMAIL_SUBJECT = "A Space Is Available!"
+RETRY_EMAIL_SUBJECT = "Retry login..."
 
 
 class EmailUtil:
