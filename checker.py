@@ -43,7 +43,8 @@ class Checker(object):
       try:
         return func(inst, *args, **kwargs)
       except (
-      TimeoutException, NoSuchElementException, ElementClickInterceptedException, StaleElementReferenceException) as e:
+        TimeoutException, NoSuchElementException, ElementClickInterceptedException,
+        StaleElementReferenceException) as e:
         inst.email_util.send_email(ERROR_EMAIL_SUBJECT, "Error:", inst.browser.page_source)
         with open(os.path.dirname(os.path.realpath(__file__)) + '/debug.html', mode='w', encoding='utf-8') as f:
           f.write(inst.browser.page_source)
@@ -157,7 +158,7 @@ class Checker(object):
 if __name__ == "__main__":
   my_checker = Checker()
   try:
-    for i in range(0, 3):
+    while True:
       my_checker.start()
       my_checker.login()
       print('Going to home page')
@@ -169,15 +170,17 @@ if __name__ == "__main__":
         try:
           print('Checking Los Angeles June 2019')
           my_checker.check_city_month(my_checker.LOS_ANGELES_BTN_ID, "6-2019")
-          wait_sec = random.randint(5, 10)
+          wait_sec = random.randint(2, 5)
           print('Wait for %d seconds' % wait_sec)
           time.sleep(wait_sec)
           print('Checking Los Angeles July 2019')
           my_checker.check_city_month(my_checker.LOS_ANGELES_BTN_ID, "7-2019")
-          wait_sec = random.randint(5, 10)
+          wait_sec = random.randint(2, 5)
           print('Wait for %d seconds' % wait_sec)
           time.sleep(wait_sec)
-        except (TimeoutException, NoSuchElementException, ElementClickInterceptedException) as e:
+        except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
+                StaleElementReferenceException) as e:
           continue
-  except (TimeoutException, NoSuchElementException, ElementClickInterceptedException) as e:
+  except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
+          StaleElementReferenceException) as e:
     my_checker.email_util.send_email(ERROR_EMAIL_SUBJECT, "Failed after 3 retries.", str(e))
