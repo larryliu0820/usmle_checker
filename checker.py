@@ -195,7 +195,7 @@ if __name__ == "__main__":
         my_checker.click_by_text(my_checker.CALENDAR_BTN_TEXT, my_checker.CALENDAR_PAGE_ID)
         while True:
             try:
-                my_checker.reserve_if_available(my_checker.LOS_ANGELES_BTN_ID, "10-2019", list(range(15, 32)))
+                my_checker.reserve_if_available(my_checker.LOS_ANGELES_BTN_ID, "6-2019", list(range(15, 32)))
                 my_checker.reserve_if_available(my_checker.LOS_ANGELES_BTN_ID, "7-2019", list(range(1, 5)))
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
                     StaleElementReferenceException) as e:
