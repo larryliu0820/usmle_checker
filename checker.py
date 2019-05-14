@@ -138,13 +138,11 @@ class Checker(object):
         return self.browser.find_element_by_xpath(self.CALENDAR_XPATH)
 
     @staticmethod
-    @email_exception
     def get_available_dates_in_month(month: WebElement) -> list:
         week_list = month.find_elements_by_tag_name("tr")[3:9]
         return [item for week in week_list for item in Checker.get_available_dates_in_week(week)]
 
     @staticmethod
-    @email_exception
     def get_available_dates_in_week(week_cal: WebElement) -> list:
         day_list = week_cal.find_elements_by_tag_name("td")
         week_cal.get_attribute("class")
@@ -181,5 +179,7 @@ if __name__ == "__main__":
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
                     StaleElementReferenceException) as e:
                 print('Retry login')
+                with open(os.path.dirname(os.path.realpath(__file__)) + '/debug.html', mode='w', encoding='utf-8') as f:
+                    f.write(my_checker.browser.page_source)
                 my_checker.email_util.send_email(RETRY_EMAIL_SUBJECT, '', my_checker.browser.page_source)
                 break
