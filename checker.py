@@ -8,16 +8,18 @@ import os
 import random
 import time
 
+from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException, \
     StaleElementReferenceException
-from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-from util import EmailUtil, ERROR_EMAIL_SUBJECT, SUCCESS_EMAIL_SUBJECT, RETRY_EMAIL_SUBJECT
+from util import EmailUtil, ERROR_EMAIL_SUBJECT, SUCCESS_EMAIL_SUBJECT, RETRY_EMAIL_SUBJECT, RESERVED_EMAIL_SUBJECT, \
+    PhoneCallUtil
 
 
 class Checker(object):
@@ -31,8 +33,10 @@ class Checker(object):
     SKIP_BTN_ID = "btnSkip"
     HOME_ID = "frmHome"
     CALENDAR_PAGE_ID = "frmCal"
+    CONFIRM_PAGE_ID = "pnlConfirm"
     CALENDAR_BTN_TEXT = "View Available Test Dates"
     LOS_ANGELES_BTN_ID = "rdFacilityList_2"
+    CITY_MAP = {LOS_ANGELES_BTN_ID: "Los Angeles"}
     MONTH_SELECT_LIST_ID = "sSelectCal"
     CALENDAR_XPATH = '//*[@id="lblUserHeading"]/table/tbody/tr[9]/td/table/tbody/tr[1]/td/table[2]/tbody/tr/td[' \
                      '4]/table/tbody/tr[3]/td[1]/table[1]/tbody/tr/td/table'
@@ -52,6 +56,7 @@ class Checker(object):
         return wrapped
 
     def __init__(self):
+        load_dotenv()
         options = Options()
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')
@@ -59,8 +64,9 @@ class Checker(object):
         self.browser = webdriver.Firefox(executable_path=dir_path + '/geckodriver')
         self.wait = WebDriverWait(self.browser, 10)
         self.email_util = EmailUtil()
-        self.username = input("Please type in your USMLE login username: ")
-        self.password = getpass.getpass("Please type in your USMLE login password: ")
+        self.call_util = PhoneCallUtil()
+        self.username = os.getenv('USMLE_USERNAME') or input("Please type in your USMLE login username: ")
+        self.password = os.getenv('USMLE_PASSWORD') or getpass.getpass("Please type in your USMLE login password: ")
 
     @email_exception
     def start(self):
@@ -70,10 +76,6 @@ class Checker(object):
 
     @email_exception
     def login(self) -> bool:
-        if not self.username:
-            self.username = input("Please type in your USMLE login username: ")
-        if not self.password:
-            self.password = getpass.getpass("Please type in your USMLE login password: ")
         username_elem = self.browser.find_element_by_id(self.USERNAME_ID)
         password_elem = self.browser.find_element_by_id(self.PASSWORD_ID)
 
@@ -101,14 +103,41 @@ class Checker(object):
         return self.click_elem(self.browser.find_element_by_link_text(button_text), expect_id)
 
     @email_exception
-    def check_city_month(self, city_id: str, month_id: str):
+    def check_city_month(self, city_id: str, month_id: str, day_range: list = None) -> list:
         initial_cal = self.get_calendar_for_city(city_id)
         month_cal = self.get_calendar_for_month(initial_cal, month_id)
         available_dates = Checker.get_available_dates_in_month(month_cal)
-        if available_dates:
+        if not day_range or not all(day in range(1, 32) for day in day_range):
+            day_range = range(1, 32)
+        available_dates_in_range = [day for day in available_dates if int(day.text.split('\n')[0]) in day_range]
+        if available_dates_in_range:
+            self.call_util.call()
             print("Congrats! We find you available spot! Sending email to %s" % self.email_util.receiver_email)
             self.email_util.send_email(SUCCESS_EMAIL_SUBJECT, "",
                                        month_cal.get_attribute('innerHTML'))
+            return available_dates_in_range
+        else:
+            return []
+
+    @email_exception
+    def reserve_if_available(self, city_id: str, month_id: str, day_range: list = None):
+        print('Checking %s %s' % (self.CITY_MAP[city_id], month_id))
+        days = self.check_city_month(city_id, month_id, day_range)
+        if days:
+            success = self.reserve(days[0])
+            if success:
+                print("Congrats! Reservation is successful! Sending email to %s" % self.email_util.receiver_email)
+                self.email_util.send_email(RESERVED_EMAIL_SUBJECT, "", self.browser.page_source)
+                exit(0)
+        else:
+            wait_sec = random.randint(2, 5)
+            print('Wait for %d seconds' % wait_sec)
+            time.sleep(wait_sec)
+
+    @email_exception
+    def reserve(self, day: WebElement) -> bool:
+        print('Clicking on %s' % day.text.split('\n')[0])
+        return self.click_elem(day.find_element_by_tag_name('a'), self.CONFIRM_PAGE_ID)
 
     @email_exception
     def get_calendar_for_city(self, city_id: str) -> WebElement:
@@ -146,7 +175,7 @@ class Checker(object):
     def get_available_dates_in_week(week_cal: WebElement) -> list:
         day_list = week_cal.find_elements_by_tag_name("td")
         week_cal.get_attribute("class")
-        return [(day.text, day.get_attribute("class")) for day in day_list if Checker.is_day_available(day)]
+        return [day for day in day_list if Checker.is_day_available(day)]
 
     @staticmethod
     def is_day_available(day: WebElement) -> bool:
@@ -166,16 +195,8 @@ if __name__ == "__main__":
         my_checker.click_by_text(my_checker.CALENDAR_BTN_TEXT, my_checker.CALENDAR_PAGE_ID)
         while True:
             try:
-                print('Checking Los Angeles June 2019')
-                my_checker.check_city_month(my_checker.LOS_ANGELES_BTN_ID, "6-2019")
-                wait_sec = random.randint(2, 5)
-                print('Wait for %d seconds' % wait_sec)
-                time.sleep(wait_sec)
-                print('Checking Los Angeles July 2019')
-                my_checker.check_city_month(my_checker.LOS_ANGELES_BTN_ID, "7-2019")
-                wait_sec = random.randint(2, 5)
-                print('Wait for %d seconds' % wait_sec)
-                time.sleep(wait_sec)
+                my_checker.reserve_if_available(my_checker.LOS_ANGELES_BTN_ID, "10-2019", list(range(15, 32)))
+                my_checker.reserve_if_available(my_checker.LOS_ANGELES_BTN_ID, "7-2019", list(range(1, 5)))
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
                     StaleElementReferenceException) as e:
                 print('Retry login')

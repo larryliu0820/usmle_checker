@@ -2,22 +2,28 @@
 #
 # Date: 5/4/2019
 import getpass
+import os
 import smtplib
 import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from twilio.rest import Client
+from dotenv import load_dotenv
 
 ERROR_EMAIL_SUBJECT = "Automatic Exam Reservation System Has An Error!"
 SUCCESS_EMAIL_SUBJECT = "A Space Is Available!"
+RESERVED_EMAIL_SUBJECT = "RESERVE ASAP!!!"
 RETRY_EMAIL_SUBJECT = "Retry login..."
 
 
 class EmailUtil:
 
     def __init__(self):
-        self.sender_email = input("Sender email: (default mengweiliu600267@gmail.com)") or "mengweiliu600267@gmail.com"
-        self.receiver_email = input("Receiver email: (default yannanyu0123@gmail.com)") or "yannanyu0123@gmail.com"
-        self.password = getpass.getpass("Type your password for %s and press enter: " % self.sender_email)
+        load_dotenv()
+        self.sender_email = os.getenv('SENDER_EMAIL') or input("Sender email: ")
+        self.receiver_email = os.getenv('RECEIVER_EMAIL') or input("Receiver email: ")
+        self.password = os.getenv('SENDER_EMAIL_PASSWORD') or getpass.getpass(
+            "Type your password for %s and press enter: " % self.sender_email)
 
     def send_email(self, subject: str, msg: str, html: str = None):
         message = MIMEMultipart("alternative")
@@ -37,3 +43,17 @@ class EmailUtil:
                 self.sender_email, self.receiver_email, message.as_string()
             )
 
+
+class PhoneCallUtil:
+
+    def __init__(self):
+        load_dotenv()
+        self.account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+        self.auth_token = os.getenv('TWILIO_AUTH_TOKEN')
+        self.to = os.getenv('TO_PHONE_NUM')
+        self.from_ = os.getenv('FROM_PHONE_NUM')
+        self.client = Client(self.account_sid, self.auth_token)
+
+    def call(self):
+        self.client.calls.create(url='http://demo.twilio.com/docs/voice.xml', to=self.to,
+                                 from_=self.from_)
