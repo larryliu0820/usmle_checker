@@ -36,12 +36,15 @@ class EmailUtil:
             html = '<a href="https://csessauthentication.ecfmg.org/">Click Me</a>' + html
             part2 = MIMEText(html, "html")
             message.attach(part2)
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            server.login(self.sender_email, self.password)
-            server.sendmail(
-                self.sender_email, self.receiver_email, message.as_string()
-            )
+        try:
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+                server.login(self.sender_email, self.password)
+                server.sendmail(
+                    self.sender_email, self.receiver_email, message.as_string()
+                )
+        except ssl.SSLError:
+            pass
 
 
 class PhoneCallUtil:

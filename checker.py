@@ -150,8 +150,7 @@ class Checker(object):
         month_select_list = cal.find_element_by_id(self.MONTH_SELECT_LIST_ID)
         month_option = month_select_list.find_element_by_xpath(
             '//select[@id="%s"]/option[@value="%s"]' % (self.MONTH_SELECT_LIST_ID, month_id))
-        month_option.click()
-        self.wait.until(EC.presence_of_element_located((By.ID, self.CALENDAR_PAGE_ID)))
+        self.click_elem(month_option, self.CALENDAR_PAGE_ID)
         return self.get_calendar()
 
     @email_exception
@@ -174,7 +173,6 @@ class Checker(object):
     @staticmethod
     def get_available_dates_in_week(week_cal: WebElement) -> list:
         day_list = week_cal.find_elements_by_tag_name("td")
-        week_cal.get_attribute("class")
         return [day for day in day_list if Checker.is_day_available(day)]
 
     @staticmethod
