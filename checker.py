@@ -1,7 +1,6 @@
 # Created by Larry Liu
 #
 # Date: 5/4/2019
-# !/usr/bin/env python
 import functools
 import getpass
 import os
