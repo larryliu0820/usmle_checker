@@ -16,7 +16,7 @@ SUCCESS_EMAIL_SUBJECT = "A Space Is Available!"
 RESERVED_EMAIL_SUBJECT = "RESERVE ASAP!!!"
 RETRY_EMAIL_SUBJECT = "Retry login..."
 
-logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 
 
 class EmailUtil:

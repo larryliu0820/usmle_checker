@@ -21,7 +21,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from util import EmailUtil, ERROR_EMAIL_SUBJECT, SUCCESS_EMAIL_SUBJECT, RETRY_EMAIL_SUBJECT, RESERVED_EMAIL_SUBJECT, \
     PhoneCallUtil
 
-logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 
 
 class Checker(object):
@@ -65,7 +65,7 @@ class Checker(object):
         options.add_argument('--disable-gpu')
         dir_path = os.path.dirname(os.path.realpath(__file__))
         self.browser = webdriver.Firefox(executable_path=dir_path + '/geckodriver')
-        self.wait = WebDriverWait(self.browser, 20)
+        self.wait = WebDriverWait(self.browser, 30)
         self.email_util = EmailUtil()
         self.call_util = PhoneCallUtil()
         self.username = os.getenv('USMLE_USERNAME') or input("Please type in your USMLE login username: ")
