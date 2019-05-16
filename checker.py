@@ -4,6 +4,7 @@
 import functools
 import getpass
 import os
+import logging
 import random
 import time
 
@@ -20,6 +21,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from util import EmailUtil, ERROR_EMAIL_SUBJECT, SUCCESS_EMAIL_SUBJECT, RETRY_EMAIL_SUBJECT, RESERVED_EMAIL_SUBJECT, \
     PhoneCallUtil
 
+logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Checker(object):
     URL = "https://csessauthentication.ecfmg.org/"
@@ -50,6 +52,7 @@ class Checker(object):
                 inst.email_util.send_email(ERROR_EMAIL_SUBJECT, "Error:", inst.browser.page_source)
                 with open(os.path.dirname(os.path.realpath(__file__)) + '/debug.html', mode='w', encoding='utf-8') as f:
                     f.write(inst.browser.page_source)
+                logging.error(str(e))
                 raise e
 
         return wrapped
@@ -71,7 +74,7 @@ class Checker(object):
     def start(self):
         self.browser.get(self.URL)
         self.wait.until(EC.presence_of_element_located((By.ID, self.WEB_AUTH_ID)))
-        print('Going to %s' % self.URL)
+        logging.debug('Going to %s' % self.URL)
 
     @email_exception
     def login(self) -> bool:
@@ -80,11 +83,11 @@ class Checker(object):
 
         username_elem.send_keys(self.username)
         password_elem.send_keys(self.password)
-        print('Filling in:')
-        print('Username:    %s' % self.username)
-        print('Password:    %s' % ('*' * len(self.password)))
+        logging.info('Filling in:')
+        logging.info('Username:    %s' % self.username)
+        logging.info('Password:    %s' % ('*' * len(self.password)))
 
-        print('\nLogin Clicked.')
+        logging.info('\nLogin Clicked.')
         return self.click_by_id(self.LOGIN_BTN_ID, self.EMERGENCY_CONT_INFO_ID)
 
     @email_exception
@@ -111,7 +114,7 @@ class Checker(object):
         available_dates_in_range = [day for day in available_dates if int(day.text.split('\n')[0]) in day_range]
         if available_dates_in_range:
             self.call_util.call()
-            print("Congrats! We find you available spot! Sending email to %s" % self.email_util.receiver_email)
+            logging.warning("Congrats! We find you available spot! Sending email to %s" % self.email_util.receiver_email)
             self.email_util.send_email(SUCCESS_EMAIL_SUBJECT, "",
                                        month_cal.get_attribute('innerHTML'))
             return available_dates_in_range
@@ -120,28 +123,28 @@ class Checker(object):
 
     @email_exception
     def reserve_if_available(self, city_id: str, month_id: str, day_range: list = None):
-        print('Checking %s %s' % (self.CITY_MAP[city_id], month_id))
+        logging.info('Checking %s %s' % (self.CITY_MAP[city_id], month_id))
         days = self.check_city_month(city_id, month_id, day_range)
         if days:
             success = self.reserve(days[0])
             if success:
-                print("Congrats! Reservation is successful! Sending email to %s" % self.email_util.receiver_email)
+                logging.warning("Congrats! Reservation is successful! Sending email to %s" % self.email_util.receiver_email)
                 self.email_util.send_email(RESERVED_EMAIL_SUBJECT, "", self.browser.page_source)
                 exit(0)
         else:
             wait_sec = random.randint(2, 5)
-            print('Wait for %d seconds' % wait_sec)
+            logging.info('Wait for %d seconds' % wait_sec)
             time.sleep(wait_sec)
 
     @email_exception
     def reserve(self, day: WebElement) -> bool:
-        print('Clicking on %s' % day.text.split('\n')[0])
+        logging.info('Clicking on %s' % day.text.split('\n')[0])
         return self.click_elem(day.find_element_by_tag_name('a'), self.CONFIRM_PAGE_ID)
 
     @email_exception
     def get_calendar_for_city(self, city_id: str) -> WebElement:
         self.click_by_id(city_id)
-        print('Get calendar')
+        logging.info('Get calendar')
         return self.get_calendar()
 
     @email_exception
@@ -185,10 +188,10 @@ if __name__ == "__main__":
     while True:
         my_checker.start()
         my_checker.login()
-        print('Going to home page')
+        logging.info('Going to home page')
         my_checker.click_by_id(my_checker.SKIP_BTN_ID, my_checker.HOME_ID)
 
-        print('Clicking on calendar button')
+        logging.info('Clicking on calendar button')
         my_checker.click_by_text(my_checker.CALENDAR_BTN_TEXT, my_checker.CALENDAR_PAGE_ID)
         while True:
             try:
@@ -196,7 +199,8 @@ if __name__ == "__main__":
                 my_checker.reserve_if_available(my_checker.LOS_ANGELES_BTN_ID, "7-2019", list(range(1, 5)))
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
                     StaleElementReferenceException) as e:
-                print('Retry login')
+                logging.error(str(e))
+                logging.warning('Retry login')
                 with open(os.path.dirname(os.path.realpath(__file__)) + '/debug.html', mode='w', encoding='utf-8') as f:
                     f.write(my_checker.browser.page_source)
                 my_checker.email_util.send_email(RETRY_EMAIL_SUBJECT, '', my_checker.browser.page_source)
