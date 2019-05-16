@@ -47,7 +47,7 @@ class EmailUtil:
                     self.sender_email, self.receiver_email, message.as_string()
                 )
         except (ssl.SSLError, smtplib.SMTPAuthenticationError) as e:
-            logging.error(str(e))
+            logging.error('Error occurred!', exc_info=True)
             pass
 
 

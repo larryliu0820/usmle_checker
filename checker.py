@@ -53,7 +53,7 @@ class Checker(object):
                 inst.email_util.send_email(ERROR_EMAIL_SUBJECT, "Error:", inst.browser.page_source)
                 with open(os.path.dirname(os.path.realpath(__file__)) + '/debug.html', mode='w', encoding='utf-8') as f:
                     f.write(inst.browser.page_source)
-                logging.error(str(e))
+                logging.error("Error occurred!", exc_info=True)
                 raise e
 
         return wrapped
@@ -200,7 +200,7 @@ if __name__ == "__main__":
                 my_checker.reserve_if_available(my_checker.LOS_ANGELES_BTN_ID, "7-2019", list(range(1, 5)))
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
                     StaleElementReferenceException) as e:
-                logging.error(str(e))
+                logging.error('Error occurred!', exc_info=True)
                 logging.warning('Retry login')
                 with open(os.path.dirname(os.path.realpath(__file__)) + '/debug.html', mode='w', encoding='utf-8') as f:
                     f.write(my_checker.browser.page_source)
