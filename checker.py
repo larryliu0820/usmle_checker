@@ -23,6 +23,7 @@ from util import EmailUtil, ERROR_EMAIL_SUBJECT, SUCCESS_EMAIL_SUBJECT, RETRY_EM
 
 logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 class Checker(object):
     URL = "https://csessauthentication.ecfmg.org/"
     HOME_URL = "https://csess2.ecfmg.org/home.aspx"

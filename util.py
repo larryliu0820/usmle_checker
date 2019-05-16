@@ -2,6 +2,7 @@
 #
 # Date: 5/4/2019
 import getpass
+import logging
 import os
 import smtplib
 import ssl
@@ -14,6 +15,8 @@ ERROR_EMAIL_SUBJECT = "Automatic Exam Reservation System Has An Error!"
 SUCCESS_EMAIL_SUBJECT = "A Space Is Available!"
 RESERVED_EMAIL_SUBJECT = "RESERVE ASAP!!!"
 RETRY_EMAIL_SUBJECT = "Retry login..."
+
+logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class EmailUtil:
@@ -44,6 +47,7 @@ class EmailUtil:
                     self.sender_email, self.receiver_email, message.as_string()
                 )
         except (ssl.SSLError, smtplib.SMTPAuthenticationError) as e:
+            logging.error(str(e))
             pass
 
 
