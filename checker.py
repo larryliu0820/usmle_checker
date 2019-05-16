@@ -61,7 +61,7 @@ class Checker(object):
         options.add_argument('--disable-gpu')
         dir_path = os.path.dirname(os.path.realpath(__file__))
         self.browser = webdriver.Firefox(executable_path=dir_path + '/geckodriver')
-        self.wait = WebDriverWait(self.browser, 10)
+        self.wait = WebDriverWait(self.browser, 20)
         self.email_util = EmailUtil()
         self.call_util = PhoneCallUtil()
         self.username = os.getenv('USMLE_USERNAME') or input("Please type in your USMLE login username: ")
