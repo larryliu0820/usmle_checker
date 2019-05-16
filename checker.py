@@ -142,7 +142,10 @@ class Checker(object):
 
     @email_exception
     def get_calendar_for_city(self, city_id: str) -> WebElement:
-        self.click_by_id(city_id)
+        city_option = self.browser.find_element_by_id(city_id)
+        if not city_option.get_attribute('checked'):
+            logging.info('Click on %s' % self.CITY_MAP[city_id])
+            self.click_by_id(city_id)
         logging.info('Get calendar')
         return self.get_calendar()
 
@@ -151,8 +154,7 @@ class Checker(object):
         month_select_list = cal.find_element_by_id(self.MONTH_SELECT_LIST_ID)
         month_option = month_select_list.find_element_by_xpath(
             '//select[@id="%s"]/option[@value="%s"]' % (self.MONTH_SELECT_LIST_ID, month_id))
-        self.click_elem(month_option, self.CALENDAR_PAGE_ID)
-        return self.get_calendar()
+        return self.get_calendar(refresh_button=month_option)
 
     @email_exception
     def click_elem(self, button: WebElement, expect_id: str = None) -> bool:
@@ -163,8 +165,18 @@ class Checker(object):
         return True
 
     @email_exception
-    def get_calendar(self) -> WebElement:
-        return self.browser.find_element_by_xpath(self.CALENDAR_XPATH)
+    def get_calendar(self, refresh_button: WebElement = None) -> WebElement:
+        try:
+            old_calendar = self.browser.find_element_by_xpath(self.CALENDAR_XPATH)
+            if refresh_button:
+                self.click_elem(refresh_button)
+                self.wait.until(EC.staleness_of(old_calendar))
+                return self.browser.find_element_by_xpath(self.CALENDAR_XPATH)
+            else:
+                return old_calendar
+        except NoSuchElementException:
+            self.wait.until(EC.presence_of_element_located((By.XPATH, self.CALENDAR_XPATH)))
+            return self.browser.find_element_by_xpath(self.CALENDAR_XPATH)
 
     @staticmethod
     def get_available_dates_in_month(month: WebElement) -> list:
