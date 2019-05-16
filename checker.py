@@ -21,7 +21,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from util import EmailUtil, ERROR_EMAIL_SUBJECT, SUCCESS_EMAIL_SUBJECT, RETRY_EMAIL_SUBJECT, RESERVED_EMAIL_SUBJECT, \
     PhoneCallUtil
 
-logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG)
+logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 
 class Checker(object):
