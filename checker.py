@@ -50,9 +50,7 @@ class Checker(object):
                 return func(inst, *args, **kwargs)
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
                     StaleElementReferenceException) as e:
-                inst.email_util.send_email(ERROR_EMAIL_SUBJECT, "Error:", inst.browser.page_source)
-                with open(os.path.dirname(os.path.realpath(__file__)) + '/debug.html', mode='w', encoding='utf-8') as f:
-                    f.write(inst.browser.page_source)
+                # inst.email_util.send_email(ERROR_EMAIL_SUBJECT, "Error:", inst.browser.page_source)
                 logging.error("Error occurred!", exc_info=True)
                 raise e
 
@@ -202,7 +200,4 @@ if __name__ == "__main__":
                     StaleElementReferenceException) as e:
                 logging.error('Error occurred!', exc_info=True)
                 logging.warning('Retry login')
-                with open(os.path.dirname(os.path.realpath(__file__)) + '/debug.html', mode='w', encoding='utf-8') as f:
-                    f.write(my_checker.browser.page_source)
-                my_checker.email_util.send_email(RETRY_EMAIL_SUBJECT, '', my_checker.browser.page_source)
                 break
