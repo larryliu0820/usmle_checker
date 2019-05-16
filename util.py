@@ -43,7 +43,7 @@ class EmailUtil:
                 server.sendmail(
                     self.sender_email, self.receiver_email, message.as_string()
                 )
-        except ssl.SSLError:
+        except (ssl.SSLError, smtplib.SMTPAuthenticationError) as e:
             pass
 
 
