@@ -131,7 +131,7 @@ class Checker(object):
                 self.email_util.send_email(RESERVED_EMAIL_SUBJECT, "", self.browser.page_source)
                 exit(0)
         else:
-            wait_sec = random.randint(2, 5)
+            wait_sec = random.randint(1, 2)
             logging.info('Wait for %d seconds' % wait_sec)
             time.sleep(wait_sec)
 
