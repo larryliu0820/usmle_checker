@@ -18,7 +18,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-from util import EmailUtil, ERROR_EMAIL_SUBJECT, SUCCESS_EMAIL_SUBJECT, RETRY_EMAIL_SUBJECT, RESERVED_EMAIL_SUBJECT, \
+from util import EmailUtil, ERROR_EMAIL_SUBJECT, SUCCESS_EMAIL_SUBJECT, RESERVED_EMAIL_SUBJECT, \
     PhoneCallUtil
 
 logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -40,8 +40,7 @@ class Checker(object):
     LOS_ANGELES_BTN_ID = "rdFacilityList_2"
     CITY_MAP = {LOS_ANGELES_BTN_ID: "Los Angeles"}
     MONTH_SELECT_LIST_ID = "sSelectCal"
-    CALENDAR_XPATH = '//*[@id="lblUserHeading"]/table/tbody/tr[9]/td/table/tbody/tr[1]/td/table[2]/tbody/tr/td[' \
-                     '4]/table/tbody/tr[3]/td[1]/table[1]/tbody/tr/td/table'
+    CALENDAR_XPATH = '//*[@bordercolor="#808080" and @bgcolor="#ffffff"]/tbody/tr/td/table'
 
     def email_exception(func):
         @functools.wraps(func)
