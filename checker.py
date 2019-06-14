@@ -50,7 +50,7 @@ class Checker(object):
                 return func(inst, *args, **kwargs)
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
                     StaleElementReferenceException) as e:
-                # inst.email_util.send_email(ERROR_EMAIL_SUBJECT, "Error:", inst.browser.page_source)
+                inst.email_util.send_email(ERROR_EMAIL_SUBJECT, "Error:", inst.browser.page_source)
                 logging.error("Error occurred!", exc_info=True)
                 raise e
 
@@ -210,6 +210,7 @@ if __name__ == "__main__":
                 my_checker.reserve_if_available(my_checker.LOS_ANGELES_BTN_ID, "7-2019", list(range(1, 5)))
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
                     StaleElementReferenceException) as e:
+                my_checker.email_util.send_email(ERROR_EMAIL_SUBJECT, "Error:", my_checker.browser.page_source)
                 logging.error('Error occurred!', exc_info=True)
                 logging.warning('Retry login')
                 break
