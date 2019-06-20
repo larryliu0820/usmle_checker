@@ -237,7 +237,7 @@ if __name__ == "__main__":
         while True:
             try:
                 for city in cities:
-                    my_checker.reserve_if_available(city, "11-2019", list(range(15, 32)))
+                    my_checker.reserve_if_available(city, "6-2019", list(range(15, 32)))
                     my_checker.reserve_if_available(city, "7-2019", list(range(1, 5)))
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
                     StaleElementReferenceException) as e:
