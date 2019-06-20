@@ -7,6 +7,7 @@ import os
 import logging
 import random
 import time
+import argparse
 
 from dotenv import load_dotenv
 from selenium import webdriver
@@ -21,7 +22,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from util import EmailUtil, ERROR_EMAIL_SUBJECT, SUCCESS_EMAIL_SUBJECT, RESERVED_EMAIL_SUBJECT, \
     PhoneCallUtil
 
-logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(filename='checker.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 
 
 class Checker(object):
@@ -38,7 +40,8 @@ class Checker(object):
     CONFIRM_PAGE_ID = "pnlConfirm"
     CALENDAR_BTN_TEXT = "View Available Test Dates"
     LOS_ANGELES_BTN_ID = "rdFacilityList_2"
-    CITY_MAP = {LOS_ANGELES_BTN_ID: "Los Angeles"}
+    HOUSTON_BTN_ID = "rdFacilityList_4"
+    CITY_MAP = {"LA": LOS_ANGELES_BTN_ID, "Houston": HOUSTON_BTN_ID}
     MONTH_SELECT_LIST_ID = "sSelectCal"
     CALENDAR_XPATH = '//*[@bordercolor="#808080" and @bgcolor="#ffffff"]/tbody/tr/td/table'
 
@@ -112,7 +115,8 @@ class Checker(object):
         available_dates_in_range = [day for day in available_dates if int(day.text.split('\n')[0]) in day_range]
         if available_dates_in_range:
             self.call_util.call()
-            logging.warning("Congrats! We find you available spot! Sending email to %s" % self.email_util.receiver_email)
+            logging.warning(
+                "Congrats! We find you available spot! Sending email to %s" % self.email_util.receiver_email)
             self.email_util.send_email(SUCCESS_EMAIL_SUBJECT, "",
                                        month_cal.get_attribute('innerHTML'))
             return available_dates_in_range
@@ -120,15 +124,16 @@ class Checker(object):
             return []
 
     @email_exception
-    def reserve_if_available(self, city_id: str, month_id: str, day_range: list = None):
-        logging.info('Checking %s %s' % (self.CITY_MAP[city_id], month_id))
+    def reserve_if_available(self, city_name: str, month_id: str, day_range: list = None):
+        logging.info('Checking %s %s' % (city_name, month_id))
+        city_id = self.CITY_MAP[city_name]
         days = self.check_city_month(city_id, month_id, day_range)
         if days:
-            success = self.reserve(days[0])
-            if success:
-                logging.warning("Congrats! Reservation is successful! Sending email to %s" % self.email_util.receiver_email)
-                self.email_util.send_email(RESERVED_EMAIL_SUBJECT, "", self.browser.page_source)
-                exit(0)
+            logging.warning(
+                "Congrats! Reservation is successful! Sending email to %s" % self.email_util.receiver_email)
+            self.email_util.send_email(RESERVED_EMAIL_SUBJECT, "", self.browser.page_source)
+            self.browser.delete_all_cookies()
+            self.start_a_new_browser_to_reserve(city_id, month_id, day_range)
         else:
             wait_sec = random.randint(1, 2)
             logging.info('Wait for %d seconds' % wait_sec)
@@ -143,7 +148,7 @@ class Checker(object):
     def get_calendar_for_city(self, city_id: str) -> WebElement:
         city_option = self.browser.find_element_by_id(city_id)
         if not city_option.get_attribute('checked'):
-            logging.info('Click on %s' % self.CITY_MAP[city_id])
+            logging.info('Click on %s' % city_id)
             self.click_by_id(city_id)
         logging.info('Get calendar')
         return self.get_calendar()
@@ -177,6 +182,26 @@ class Checker(object):
             self.wait.until(EC.presence_of_element_located((By.XPATH, self.CALENDAR_XPATH)))
             return self.browser.find_element_by_xpath(self.CALENDAR_XPATH)
 
+    @email_exception
+    def start_a_new_browser_to_reserve(self, city_id: str, month_id: str, day_range: list = None):
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference("browser.cache.disk.enable", False)
+        profile.set_preference("browser.cache.memory.enable", False)
+        profile.set_preference("browser.cache.offline.enable", False)
+        profile.set_preference("network.http.use-cache", False)
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        self.browser = webdriver.Firefox(firefox_profile=profile, executable_path=dir_path + '/geckodriver')
+        self.wait = WebDriverWait(self.browser, 30)
+        self.start()
+        self.login()
+        self.click_by_id(self.SKIP_BTN_ID, self.HOME_ID)
+        self.click_by_text(self.CALENDAR_BTN_TEXT, self.CALENDAR_PAGE_ID)
+        days = self.check_city_month(city_id, month_id, day_range)
+        if days:
+            success = self.reserve(days[0])
+            if success:
+                exit(0)
+
     @staticmethod
     def get_available_dates_in_month(month: WebElement) -> list:
         week_list = month.find_elements_by_tag_name("tr")[3:9]
@@ -194,6 +219,12 @@ class Checker(object):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Specify the city to be monitored, after "--city". For example '
+                                                 '"--city LA" or "--city Houston".')
+    parser.add_argument('--city', nargs='*', type=str, default=['LA'], help='The name of the city. Only supports "LA" '
+                                                                            'or "Houston"')
+    args = parser.parse_args()
+    cities = args.city
     my_checker = Checker()
     while True:
         my_checker.start()
@@ -205,8 +236,9 @@ if __name__ == "__main__":
         my_checker.click_by_text(my_checker.CALENDAR_BTN_TEXT, my_checker.CALENDAR_PAGE_ID)
         while True:
             try:
-                my_checker.reserve_if_available(my_checker.LOS_ANGELES_BTN_ID, "6-2019", list(range(15, 32)))
-                my_checker.reserve_if_available(my_checker.LOS_ANGELES_BTN_ID, "7-2019", list(range(1, 5)))
+                for city in cities:
+                    my_checker.reserve_if_available(city, "11-2019", list(range(15, 32)))
+                    my_checker.reserve_if_available(city, "7-2019", list(range(1, 5)))
             except (TimeoutException, NoSuchElementException, ElementClickInterceptedException,
                     StaleElementReferenceException) as e:
                 my_checker.email_util.send_email(ERROR_EMAIL_SUBJECT, "Error:", my_checker.browser.page_source)
