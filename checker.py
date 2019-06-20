@@ -41,7 +41,9 @@ class Checker(object):
     CALENDAR_BTN_TEXT = "View Available Test Dates"
     LOS_ANGELES_BTN_ID = "rdFacilityList_2"
     HOUSTON_BTN_ID = "rdFacilityList_4"
-    CITY_MAP = {"LA": LOS_ANGELES_BTN_ID, "Houston": HOUSTON_BTN_ID}
+    ATLANTA_BTN_ID = "rdFacilityList_1"
+    CITY_MAP = {"LA": LOS_ANGELES_BTN_ID, "Houston": HOUSTON_BTN_ID, "Atlanta": ATLANTA_BTN_ID}
+    SPACE_NOT_FOUND_ERR_ID = "lblErrMsg"
     MONTH_SELECT_LIST_ID = "sSelectCal"
     CALENDAR_XPATH = '//*[@bordercolor="#808080" and @bgcolor="#ffffff"]/tbody/tr/td/table'
 
@@ -108,6 +110,8 @@ class Checker(object):
     @email_exception
     def check_city_month(self, city_id: str, month_id: str, day_range: list = None) -> list:
         initial_cal = self.get_calendar_for_city(city_id)
+        if initial_cal is None:
+            return []
         month_cal = self.get_calendar_for_month(initial_cal, month_id)
         available_dates = Checker.get_available_dates_in_month(month_cal)
         if not day_range or not all(day in range(1, 32) for day in day_range):
@@ -145,13 +149,38 @@ class Checker(object):
         return self.click_elem(day.find_element_by_tag_name('a'), self.CONFIRM_PAGE_ID)
 
     @email_exception
-    def get_calendar_for_city(self, city_id: str) -> WebElement:
+    def get_calendar_for_city(self, city_id: str, force_refresh: bool = True) -> WebElement:
         city_option = self.browser.find_element_by_id(city_id)
         if not city_option.get_attribute('checked'):
             logging.info('Click on %s' % city_id)
             self.click_by_id(city_id)
-        logging.info('Get calendar')
-        return self.get_calendar()
+            logging.info('Get calendar')
+            return self.get_calendar()
+        else:
+            if self.has_no_space_err_msg():
+                if force_refresh:
+                    self.click_by_id(self.get_city_id_different_from(city_id))
+                    return self.get_calendar_for_city(city_id, False)
+                else:
+                    return None
+            else:
+                logging.info('Get calendar')
+                return self.get_calendar()
+
+
+    @email_exception
+    def has_no_space_err_msg(self) -> bool:
+        try:
+            msg = self.browser.find_element_by_id(self.SPACE_NOT_FOUND_ERR_ID)
+            return msg is not None
+        except NoSuchElementException:
+            return False
+
+    @email_exception
+    def get_city_id_different_from(self, city_id: str) -> str:
+        for value in self.CITY_MAP.values():
+            if value is not city_id:
+                return value
 
     @email_exception
     def get_calendar_for_month(self, cal: WebElement, month_id: str) -> WebElement:
@@ -179,6 +208,11 @@ class Checker(object):
             else:
                 return old_calendar
         except NoSuchElementException:
+            try:
+                self.browser.find_element_by_id(self.SPACE_NOT_FOUND_ERR_ID)
+                return None
+            except NoSuchElementException:
+                pass
             self.wait.until(EC.presence_of_element_located((By.XPATH, self.CALENDAR_XPATH)))
             return self.browser.find_element_by_xpath(self.CALENDAR_XPATH)
 
