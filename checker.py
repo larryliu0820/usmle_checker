@@ -40,9 +40,14 @@ class Checker(object):
     CONFIRM_PAGE_ID = "pnlConfirm"
     CALENDAR_BTN_TEXT = "View Available Test Dates"
     LOS_ANGELES_BTN_ID = "rdFacilityList_2"
+    CHCAGO_BTN_ID = "rdFacilityList_3"
     HOUSTON_BTN_ID = "rdFacilityList_4"
     ATLANTA_BTN_ID = "rdFacilityList_1"
-    CITY_MAP = {"LA": LOS_ANGELES_BTN_ID, "Houston": HOUSTON_BTN_ID, "Atlanta": ATLANTA_BTN_ID}
+    PHILADELPHIA_BTN_ID = "rdFacilityList_0"
+    CITY_BTN_MAP = {"Philadelphia": PHILADELPHIA_BTN_ID, "Atlanta": ATLANTA_BTN_ID, "LA": LOS_ANGELES_BTN_ID,
+                    "Chicago": CHCAGO_BTN_ID, "Houston": HOUSTON_BTN_ID}
+    BTN_CITY_MAP = {PHILADELPHIA_BTN_ID: "Philadelphia", ATLANTA_BTN_ID: "Atlanta", LOS_ANGELES_BTN_ID: "LA",
+                    CHCAGO_BTN_ID: "Chicago", HOUSTON_BTN_ID: "Houston"}
     SPACE_NOT_FOUND_ERR_ID = "lblErrMsg"
     MONTH_SELECT_LIST_ID = "sSelectCal"
     CALENDAR_XPATH = '//*[@bordercolor="#808080" and @bgcolor="#ffffff"]/tbody/tr/td/table'
@@ -121,8 +126,8 @@ class Checker(object):
             self.call_util.call()
             logging.warning(
                 "Congrats! We find you available spot! Sending email to %s" % self.email_util.receiver_email)
-            self.email_util.send_email(SUCCESS_EMAIL_SUBJECT, "",
-                                       month_cal.get_attribute('innerHTML'))
+            self.email_util.send_email(SUCCESS_EMAIL_SUBJECT + self.BTN_CITY_MAP[city_id], "",
+            month_cal.get_attribute('innerHTML'))
             return available_dates_in_range
         else:
             return []
@@ -130,7 +135,7 @@ class Checker(object):
     @email_exception
     def reserve_if_available(self, city_name: str, month_id: str, day_range: list = None):
         logging.info('Checking %s %s' % (city_name, month_id))
-        city_id = self.CITY_MAP[city_name]
+        city_id = self.CITY_BTN_MAP[city_name]
         days = self.check_city_month(city_id, month_id, day_range)
         if days:
             logging.warning(
@@ -167,7 +172,6 @@ class Checker(object):
                 logging.info('Get calendar')
                 return self.get_calendar()
 
-
     @email_exception
     def has_no_space_err_msg(self) -> bool:
         try:
@@ -178,7 +182,7 @@ class Checker(object):
 
     @email_exception
     def get_city_id_different_from(self, city_id: str) -> str:
-        for value in self.CITY_MAP.values():
+        for value in self.CITY_BTN_MAP.values():
             if value is not city_id:
                 return value
 
@@ -218,6 +222,8 @@ class Checker(object):
 
     @email_exception
     def start_a_new_browser_to_reserve(self, city_id: str, month_id: str, day_range: list = None):
+        self.browser.save_screenshot('./success.png')
+        self.browser.close()
         profile = webdriver.FirefoxProfile()
         profile.set_preference("browser.cache.disk.enable", False)
         profile.set_preference("browser.cache.memory.enable", False)
@@ -255,8 +261,8 @@ class Checker(object):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Specify the city to be monitored, after "--city". For example '
                                                  '"--city LA" or "--city Houston".')
-    parser.add_argument('--city', nargs='*', type=str, default=['LA'], help='The name of the city. Only supports "LA" '
-                                                                            'or "Houston"')
+    parser.add_argument('--city', nargs='*', type=str, default=['LA'], help='The name of the city. Supports "LA" '
+                                                                            ', "Houston", "Chicago", "Philadelphia"')
     args = parser.parse_args()
     cities = args.city
     my_checker = Checker()
