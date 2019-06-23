@@ -126,8 +126,8 @@ class Checker(object):
             self.call_util.call()
             logging.warning(
                 "Congrats! We find you available spot! Sending email to %s" % self.email_util.receiver_email)
-            self.email_util.send_email(SUCCESS_EMAIL_SUBJECT + self.BTN_CITY_MAP[city_id], "",
-            month_cal.get_attribute('innerHTML'))
+            self.email_util.send_email(self.BTN_CITY_MAP[city_id], "",
+                                       month_cal.get_attribute('innerHTML'))
             return available_dates_in_range
         else:
             return []
@@ -140,7 +140,6 @@ class Checker(object):
         if days:
             logging.warning(
                 "Congrats! Reservation is successful! Sending email to %s" % self.email_util.receiver_email)
-            self.email_util.send_email(RESERVED_EMAIL_SUBJECT, "", self.browser.page_source)
             self.browser.delete_all_cookies()
             self.start_a_new_browser_to_reserve(city_id, month_id, day_range)
         else:
