@@ -118,6 +118,8 @@ class Checker(object):
         if initial_cal is None:
             return []
         month_cal = self.get_calendar_for_month(initial_cal, month_id)
+        if month_cal is None:
+            return []
         available_dates = Checker.get_available_dates_in_month(month_cal)
         if not day_range or not all(day in range(1, 32) for day in day_range):
             day_range = range(1, 32)
