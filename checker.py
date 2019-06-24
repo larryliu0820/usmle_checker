@@ -142,7 +142,6 @@ class Checker(object):
         if days:
             logging.warning(
                 "Congrats! Reservation is successful! Sending email to %s" % self.email_util.receiver_email)
-            self.browser.delete_all_cookies()
             self.reserve(days[0])
             self.start_a_new_browser_to_reserve(city_id, month_id, day_range)
         else:
