@@ -224,7 +224,6 @@ class Checker(object):
     @email_exception
     def start_a_new_browser_to_reserve(self, city_id: str, month_id: str, day_range: list = None):
         self.browser.save_screenshot('./success.png')
-        self.browser.close()
         profile = webdriver.FirefoxProfile()
         profile.set_preference("browser.cache.disk.enable", False)
         profile.set_preference("browser.cache.memory.enable", False)
