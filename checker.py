@@ -224,13 +224,8 @@ class Checker(object):
     @email_exception
     def start_a_new_browser_to_reserve(self, city_id: str, month_id: str, day_range: list = None):
         self.browser.save_screenshot('./success.png')
-        profile = webdriver.FirefoxProfile()
-        profile.set_preference("browser.cache.disk.enable", False)
-        profile.set_preference("browser.cache.memory.enable", False)
-        profile.set_preference("browser.cache.offline.enable", False)
-        profile.set_preference("network.http.use-cache", False)
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        self.browser = webdriver.Firefox(firefox_profile=profile, executable_path=dir_path + '/geckodriver')
+        self.browser = webdriver.Firefox(executable_path=dir_path + '/geckodriver')
         self.wait = WebDriverWait(self.browser, 30)
         self.start()
         self.login()
